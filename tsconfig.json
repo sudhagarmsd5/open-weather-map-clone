@@ -21,14 +21,15 @@
     "paths": {
       "@ui/components": [
         "./projects/ui/src/lib/components/index.ts"
-      ],
-      "@src":["./src/*"]
+      ]
     },
     "lib": [
       "ES2022",
       "dom"
     ],
-    "types": ["node"]
+    "types": [
+      "node"
+    ]
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,
