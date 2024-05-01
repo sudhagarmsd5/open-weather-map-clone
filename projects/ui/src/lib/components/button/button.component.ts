@@ -9,7 +9,7 @@ import { Component, input } from '@angular/core';
     } @else if (variant() === 'icon'){
         <button [class]="class()" [disabled]="disabled()">
         @if (label()){
-            <span class="material-symbols-outlined">{{label()}}</span>
+            <span class="material-symbols-outlined" style="color:#48484a">{{label()}}</span>
         }
         </button>
     }`,

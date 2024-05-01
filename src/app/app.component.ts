@@ -1,16 +1,17 @@
-import { Component, OnInit, effect, inject, signal } from '@angular/core';
+import { Component, ElementRef, OnInit, Renderer2, ViewChild, effect, inject, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { ApiService } from './services/api.service';
 import { ButtonComponent, InputComponent, } from "@ui/components";
 import { SearchCity, Units, Weather } from './types/location.type';
 import { UtilService } from './utils/util';
+import { environment } from '../environments/environment';
 
 @Component({
   selector: 'app-root',
   standalone: true,
   imports: [RouterOutlet, InputComponent, ButtonComponent],
   template: `
-    <section class="px-2 bg-gray-100">
+    <section class="px-2 py-5 bg-light-gray-two">
       <div class="grid grid-cols-2 md:grid-cols-[5fr_4fr] gap-5">
         <div class="flex justify-center items-center w-full">
           <div class="relative">
@@ -20,11 +21,14 @@ import { UtilService } from './utils/util';
             placeholder="Search city"
             ></ui-input>
             @if (searchReponse().length > 0){
-              <div class="absolute bg-white top-6 border-b rounded-b-md w-full">
-                <ul class="border space-y-4 cursor-pointer list-none">
+              <div  class="absolute bg-white top-8 border-b rounded-b-md w-full">
+                <ul #menu class="border space-y-4 cursor-pointer list-none p-1 ">
                   @for (item of searchReponse(); track $index) {
-                    <li class="py-2 px-4 hover:bg-gray-200 transition-colors duration-300">
-                      {{item.name}}
+                    <li class="py-2 px-4 hover:bg-gray-100 rounded-md transition-colors duration-300" (click)="selectSearchItem(item)">
+                    <div class="flex items-center">
+                      {{item.name}}, {{item.sys.country}} 
+                    <img class="ml-1 h-3" [src]="displayFlag(item)" />
+                  </div>
                     </li>
                   }
                 </ul>
@@ -33,12 +37,16 @@ import { UtilService } from './utils/util';
           </div>
           <ui-button variant="plain" [class]="'text-white bg-gray-950 py-[5px] px-4 rounded-r-md'" label="Search" (click)="searchLocation()"></ui-button>
         </div>
-        <div class="flex">
-          <div class="p-5">
-          <ui-button variant="icon" [class]="'h-10 w-full'" [label]="'near_me'" (click)="currentLocation()"></ui-button>
+        <div class="flex items-center justify-around">
+          <div class="">
+          <ui-button variant="icon" [class]="'h-6 w-full hover:bg-white rounded-sm'" [label]="'near_me'" (click)="currentLocation()"></ui-button>
           </div>
-          <div class="p-5">2</div>
-          <div class="p-5">2</div>
+          <div class="">
+            <div class="bg-light-gray-one flex w-64 p-1 rounded-md">
+              <div class="w-1/2 text-center rounded-md cursor-pointer text-light-gray-three" [class]="unitType() == 'metric' ? 'bg-white':''" (click)="unitType.set('metric')">Metric: °C, m/s</div>
+              <div class="w-1/2 text-center rounded-md cursor-pointer text-light-gray-three" [class]="unitType() == 'imperial' ? 'bg-white':''" (click)="unitType.set('imperial')">Imperial: °F, mph</div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -54,14 +62,17 @@ export class AppComponent implements OnInit {
   searchReponse = signal<any[]>([]);
   readonly #apiService = inject(ApiService);
   readonly #utilService = inject(UtilService);
+  #renderer = inject(Renderer2);
+  @ViewChild('menu') menu!: ElementRef;
 
   constructor() {
     this.callWeatherApi()
 
-    effect(() => {
-      if (this.searchCity())
+    this.#renderer.listen('window', 'click', (e: Event) => {
+      if (!this.menu?.nativeElement?.contains(e.target)) {
         this.searchReponse.set([])
-    }, { allowSignalWrites: true })
+      }
+    })
   }
 
   ngOnInit(): void {
@@ -123,5 +134,15 @@ export class AppComponent implements OnInit {
   searchLocation() {
     if (this.searchCity())
       this.getCityDetails({ q: this.searchCity(), units: this.unitType() })
+  }
+
+  selectSearchItem(item: any) {
+    console.log(item);
+
+  }
+
+  displayFlag(item: any) {
+    let country: string = item.sys.country
+    return `${environment.img_flags}${country.toLocaleLowerCase()}.png`
   }
 }
